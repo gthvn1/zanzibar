@@ -13,3 +13,9 @@ So [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Monk
 ## Travel to Monkey Islang
 
 - As easy as `zig build run`
+- We will visit
+  - [ ] **lexer** islang
+  - [ ] **parser** islang
+  - [ ] **AST** islang
+  - [ ] **internal object system** islang
+  - [ ] **evaluator** islang
