@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const TokenType = enum {
     // Special types
     illegal,
@@ -22,6 +24,15 @@ pub const TokenType = enum {
     // Keywords
     function,
     let,
+
+    pub fn lookupIdent(ident: []u8) TokenType {
+        if (std.mem.eql(u8, ident, "fn"))
+            return .function;
+        if (std.mem.eql(u8, ident, "let"))
+            return .let;
+
+        return .ident;
+    }
 
     pub fn string_of_tokenType(tok: TokenType) []const u8 {
         return switch (tok) {
