@@ -26,13 +26,25 @@ pub const Lexer = struct {
     }
 
     pub fn nextToken(self: *Lexer) token.Token {
-        const pos = self.position;
         var ttype: token.TokenType = undefined;
+        var tsize: usize = 1; // Most of tokens are 1 char so by default
+        // we set token size to one but some are 2 or more. Note that
+        // ident are not using tsize and are returned by their own function.
 
         self.skipWhitespace();
 
+        const pos = self.position; // save position after skipping whitespace...
+
         switch (self.ch) {
-            '=' => ttype = .ASSIGN,
+            '=' => {
+                if (self.peekChar() == '=') {
+                    self.readChar();
+                    ttype = .EQ;
+                    tsize = 2;
+                } else {
+                    ttype = .ASSIGN;
+                }
+            },
             ';' => ttype = .SEMICOLON,
             '(' => ttype = .LPAREN,
             ')' => ttype = .RPAREN,
@@ -41,7 +53,15 @@ pub const Lexer = struct {
             '-' => ttype = .MINUS,
             '*' => ttype = .ASTERIX,
             '/' => ttype = .SLASH,
-            '!' => ttype = .BANG,
+            '!' => {
+                if (self.peekChar() == '=') {
+                    self.readChar();
+                    ttype = .NOT_EQ;
+                    tsize = 2;
+                } else {
+                    ttype = .BANG;
+                }
+            },
             '<' => ttype = .LT,
             '>' => ttype = .GT,
             '{' => ttype = .LBRACE,
@@ -62,7 +82,7 @@ pub const Lexer = struct {
 
         self.readChar();
 
-        return token.Token.new(ttype, self.input[pos .. pos + 1]);
+        return token.Token.new(ttype, self.input[pos .. pos + tsize]);
     }
 
     fn isLetter(c: u8) bool {
@@ -83,6 +103,12 @@ pub const Lexer = struct {
             self.position = self.read_position;
             self.read_position += 1;
         }
+    }
+
+    /// peekChar is similar to readChar except that it doesn't increment the positions
+    /// It is a dry run version of readChar.
+    fn peekChar(self: *Lexer) u8 {
+        return if (self.read_position >= self.input.len) 0 else self.input[self.read_position];
     }
 
     fn readIdentifier(self: *Lexer) token.Token {
@@ -254,7 +280,9 @@ test "new tokens" {
         \\   return true;
         \\ } else {
         \\   return false;
-        \\}
+        \\ }
+        \\ 10 == 10;
+        \\ 9 != 10; 
     ;
     var l = try Lexer.new(std.testing.allocator, input);
     defer l.free();
@@ -323,6 +351,28 @@ test "new tokens" {
     try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
     try std.testing.expectEqual(t.type, token.TokenType.RBRACE);
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.INT);
+    try std.testing.expectEqualStrings(t.literal, "10");
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.EQ);
+    try std.testing.expectEqualStrings(t.literal, "==");
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.INT);
+    try std.testing.expectEqualStrings(t.literal, "10");
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.INT);
+    try std.testing.expectEqualStrings(t.literal, "9");
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.NOT_EQ);
+    try std.testing.expectEqualStrings(t.literal, "!=");
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.INT);
+    try std.testing.expectEqualStrings(t.literal, "10");
+    t = l.nextToken();
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
     try std.testing.expectEqual(t.type, token.TokenType.EOF);
 }

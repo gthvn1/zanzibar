@@ -19,9 +19,10 @@ pub const TokenType = enum {
     ASTERIX,
     SLASH,
     BANG,
-
     LT,
     GT,
+    EQ,
+    NOT_EQ,
 
     // Delimiters
     COMMA,
@@ -77,6 +78,8 @@ pub const TokenType = enum {
             .BANG => "!",
             .LG => "<",
             .GT => ">",
+            .EQ => "==",
+            .NOT_EQ => "!=",
 
             // Delimiters
             .COMMA => ",",

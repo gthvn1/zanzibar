@@ -5,7 +5,7 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
-    var l = try lexer.Lexer.new(gpa.allocator(), "let a = 10;");
+    var l = try lexer.Lexer.new(gpa.allocator(), "10 == 10;");
     defer l.free();
 
     var t = l.nextToken();
