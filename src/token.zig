@@ -26,23 +26,27 @@ pub const TokenType = enum {
     let,
 
     pub fn lookupIdent(ident: []u8) TokenType {
-        if (std.mem.eql(u8, ident, "fn"))
-            return .function;
-        if (std.mem.eql(u8, ident, "let"))
-            return .let;
-
-        return .ident;
+        return if (keywordsFromString(ident)) |ttype|
+            ttype
+        else
+            .ident;
     }
 
-    pub fn string_of_tokenType(tok: TokenType) []const u8 {
+    pub fn keywordsFromString(str: []const u8) ?TokenType {
+        if (std.mem.eql(u8, "fn", str)) return .function;
+        if (std.mem.eql(u8, "let", str)) return .let;
+        return null;
+    }
+
+    pub fn stringFromTokenType(tok: TokenType) []const u8 {
         return switch (tok) {
             // Special types
             .illegal => "ILLEGAL",
             .eof => "EOF",
 
             // Identifiers and litterals
-            .ident => "IDENT", // add, foobar, x, y, ...
-            .int => "INT", // 1234
+            .ident => "IDENT",
+            .int => "INT",
 
             // Operators
             .assign => "=",
