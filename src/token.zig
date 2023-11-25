@@ -15,6 +15,13 @@ pub const TokenType = enum {
     // Operators
     ASSIGN,
     PLUS,
+    MINUS,
+    ASTERIX,
+    SLASH,
+    BANG,
+
+    LT,
+    GT,
 
     // Delimiters
     COMMA,
@@ -27,6 +34,11 @@ pub const TokenType = enum {
     // Keywords
     FUNCTION,
     LET,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
+    RETURN,
 
     pub fn lookupIdent(ident: []u8) TokenType {
         return if (keywordsFromString(ident)) |ttype|
@@ -38,6 +50,11 @@ pub const TokenType = enum {
     pub fn keywordsFromString(str: []const u8) ?TokenType {
         if (std.mem.eql(u8, "fn", str)) return .FUNCTION;
         if (std.mem.eql(u8, "let", str)) return .LET;
+        if (std.mem.eql(u8, "true", str)) return .TRUE;
+        if (std.mem.eql(u8, "false", str)) return .FALSE;
+        if (std.mem.eql(u8, "if", str)) return .IF;
+        if (std.mem.eql(u8, "else", str)) return .ELSE;
+        if (std.mem.eql(u8, "return", str)) return .RETURN;
         return null;
     }
 
@@ -54,6 +71,12 @@ pub const TokenType = enum {
             // Operators
             .ASSIGN => "=",
             .PLUS => "+",
+            .MINUS => "-",
+            .ASTERIX => "*",
+            .SLASH => "/",
+            .BANG => "!",
+            .LG => "<",
+            .GT => ">",
 
             // Delimiters
             .COMMA => ",",
