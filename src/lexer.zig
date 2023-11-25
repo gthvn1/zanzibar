@@ -27,7 +27,10 @@ pub const Lexer = struct {
 
     fn isLetter(c: u8) bool {
         // It will allow to use identifier like "foo_bar"
-        return ('a' <= c and c <= 'z') or ('A' <= c and c <= 'Z') or (c == '_');
+        return switch (c) {
+            'A'...'Z', 'a'...'z', '_' => true,
+            else => false,
+        };
     }
 
     /// Read the next character and advance the position. If the
