@@ -32,21 +32,21 @@ pub const Lexer = struct {
         self.skipWhitespace();
 
         switch (self.ch) {
-            '=' => ttype = .assign,
-            ';' => ttype = .semicolon,
-            '(' => ttype = .lparen,
-            ')' => ttype = .rparen,
-            ',' => ttype = .comma,
-            '+' => ttype = .plus,
-            '{' => ttype = .lbrace,
-            '}' => ttype = .rbrace,
-            0 => return token.Token.new(.eof, ""),
+            '=' => ttype = .ASSIGN,
+            ';' => ttype = .SEMICOLON,
+            '(' => ttype = .LPAREN,
+            ')' => ttype = .RPAREN,
+            ',' => ttype = .COMMA,
+            '+' => ttype = .PLUS,
+            '{' => ttype = .LBRACE,
+            '}' => ttype = .RBRACE,
+            0 => return token.Token.new(.EOF, ""),
             else => {
                 if (isLetter(self.ch))
                     return self.readIdentifier();
                 if (std.ascii.isDigit(self.ch))
                     return self.readNumber();
-                ttype = .illegal;
+                ttype = .ILLEGAL;
             },
         }
 
@@ -94,7 +94,7 @@ pub const Lexer = struct {
             self.readChar();
 
         const ident = self.input[pos..self.position];
-        return token.Token.new(token.TokenType.int, ident);
+        return token.Token.new(token.TokenType.INT, ident);
     }
 
     fn skipWhitespace(self: *Lexer) void {
@@ -109,31 +109,31 @@ test "simple tokens" {
     defer l.free();
 
     var t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.assign);
+    try std.testing.expectEqual(t.type, token.TokenType.ASSIGN);
     try std.testing.expectEqualStrings(t.literal, "=");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.plus);
+    try std.testing.expectEqual(t.type, token.TokenType.PLUS);
     try std.testing.expectEqualStrings(t.literal, "+");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.lparen);
+    try std.testing.expectEqual(t.type, token.TokenType.LPAREN);
     try std.testing.expectEqualStrings(t.literal, "(");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.rparen);
+    try std.testing.expectEqual(t.type, token.TokenType.RPAREN);
     try std.testing.expectEqualStrings(t.literal, ")");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.lbrace);
+    try std.testing.expectEqual(t.type, token.TokenType.LBRACE);
     try std.testing.expectEqualStrings(t.literal, "{");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.rbrace);
+    try std.testing.expectEqual(t.type, token.TokenType.RBRACE);
     try std.testing.expectEqualStrings(t.literal, "}");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.comma);
+    try std.testing.expectEqual(t.type, token.TokenType.COMMA);
     try std.testing.expectEqualStrings(t.literal, ",");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.semicolon);
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     try std.testing.expectEqualStrings(t.literal, ";");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.eof);
+    try std.testing.expectEqual(t.type, token.TokenType.EOF);
     try std.testing.expectEqualStrings(t.literal, "");
 }
 
@@ -152,90 +152,90 @@ test "all tokens" {
     defer l.free();
 
     var t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.let);
+    try std.testing.expectEqual(t.type, token.TokenType.LET);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "five");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.assign);
+    try std.testing.expectEqual(t.type, token.TokenType.ASSIGN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.int);
+    try std.testing.expectEqual(t.type, token.TokenType.INT);
     try std.testing.expectEqualStrings(t.literal, "5");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.semicolon);
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.let);
+    try std.testing.expectEqual(t.type, token.TokenType.LET);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "ten");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.assign);
+    try std.testing.expectEqual(t.type, token.TokenType.ASSIGN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.int);
+    try std.testing.expectEqual(t.type, token.TokenType.INT);
     try std.testing.expectEqualStrings(t.literal, "10");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.semicolon);
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.let);
+    try std.testing.expectEqual(t.type, token.TokenType.LET);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "add");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.assign);
+    try std.testing.expectEqual(t.type, token.TokenType.ASSIGN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.function);
+    try std.testing.expectEqual(t.type, token.TokenType.FUNCTION);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.lparen);
+    try std.testing.expectEqual(t.type, token.TokenType.LPAREN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "x");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.comma);
+    try std.testing.expectEqual(t.type, token.TokenType.COMMA);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "y");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.rparen);
+    try std.testing.expectEqual(t.type, token.TokenType.RPAREN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.lbrace);
+    try std.testing.expectEqual(t.type, token.TokenType.LBRACE);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "x");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.plus);
+    try std.testing.expectEqual(t.type, token.TokenType.PLUS);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "y");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.semicolon);
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.rbrace);
+    try std.testing.expectEqual(t.type, token.TokenType.RBRACE);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.semicolon);
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.let);
+    try std.testing.expectEqual(t.type, token.TokenType.LET);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "result");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.assign);
+    try std.testing.expectEqual(t.type, token.TokenType.ASSIGN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "add");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.lparen);
+    try std.testing.expectEqual(t.type, token.TokenType.LPAREN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "five");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.comma);
+    try std.testing.expectEqual(t.type, token.TokenType.COMMA);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.ident);
+    try std.testing.expectEqual(t.type, token.TokenType.IDENT);
     try std.testing.expectEqualStrings(t.literal, "ten");
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.rparen);
+    try std.testing.expectEqual(t.type, token.TokenType.RPAREN);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.semicolon);
+    try std.testing.expectEqual(t.type, token.TokenType.SEMICOLON);
     t = l.nextToken();
-    try std.testing.expectEqual(t.type, token.TokenType.eof);
+    try std.testing.expectEqual(t.type, token.TokenType.EOF);
 }

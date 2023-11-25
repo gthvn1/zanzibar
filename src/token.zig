@@ -1,68 +1,71 @@
 const std = @import("std");
 
 pub const TokenType = enum {
+    // We use uppercase to avoid conflict with existing symbol like
+    // false, true, ...
+
     // Special types
-    illegal,
-    eof,
+    ILLEGAL,
+    EOF,
 
     // Identifiers and litterals
-    ident, // add, foobar, x, y, ...
-    int, // 1234
+    IDENT, // add, foobar, x, y, ...
+    INT, // 1234
 
     // Operators
-    assign,
-    plus,
+    ASSIGN,
+    PLUS,
 
     // Delimiters
-    comma,
-    semicolon,
-    lparen,
-    rparen,
-    lbrace,
-    rbrace,
+    COMMA,
+    SEMICOLON,
+    LPAREN,
+    RPAREN,
+    LBRACE,
+    RBRACE,
 
     // Keywords
-    function,
-    let,
+    FUNCTION,
+    LET,
 
     pub fn lookupIdent(ident: []u8) TokenType {
         return if (keywordsFromString(ident)) |ttype|
             ttype
         else
-            .ident;
+            .IDENT;
     }
 
     pub fn keywordsFromString(str: []const u8) ?TokenType {
-        if (std.mem.eql(u8, "fn", str)) return .function;
-        if (std.mem.eql(u8, "let", str)) return .let;
+        if (std.mem.eql(u8, "fn", str)) return .FUNCTION;
+        if (std.mem.eql(u8, "let", str)) return .LET;
         return null;
     }
 
     pub fn stringFromTokenType(tok: TokenType) []const u8 {
         return switch (tok) {
             // Special types
-            .illegal => "ILLEGAL",
-            .eof => "EOF",
+            .ILLEGAL => "ILLEGAL",
+            .EOF => "EOF",
 
             // Identifiers and litterals
-            .ident => "IDENT",
-            .int => "INT",
+            .IDENT => "IDENT",
+            .INT => "INT",
 
             // Operators
-            .assign => "=",
-            .plus => "+",
+            .ASSIGN => "=",
+            .PLUS => "+",
 
             // Delimiters
-            .comma => ",",
-            .semicolon => ";",
-            .lparen => "(",
-            .rparen => ")",
-            .lbrace => "{",
-            .rbrace => "}",
+            .COMMA => ",",
+            .SEMICOLON => ";",
+            .LPAREN => "(",
+            .RPAREN => ")",
+            .LBRACE => "{",
+            .RBRACE => "}",
 
             // Keywords
-            .function => "FUNCTION",
-            .let => "LET",
+            .FUNCTION => "FUNCTION",
+            .LET => "LET",
         };
     }
 };
