@@ -14,7 +14,7 @@ So [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Monk
 
 - As easy as `zig build run`
 - We will visit
-  - [ ] **lexer** islang
+  - [x] **lexer** islang
   - [ ] **parser** islang
   - [ ] **AST** islang
   - [ ] **internal object system** islang
