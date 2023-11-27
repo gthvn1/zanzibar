@@ -1,26 +1,19 @@
 const std = @import("std");
-const lexer = @import("lexer.zig");
+const repl = @import("repl.zig");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    const stdin = std.io.getStdIn().reader();
+    const stdout = std.io.getStdOut().writer();
 
-    var l = try lexer.Lexer.new(gpa.allocator(), "10 == 10;");
-    defer l.free();
+    var buf = std.io.bufferedWriter(stdout);
+    var w = buf.writer();
+    try w.print("Welcome to Monkey Islang!!!\n", .{});
+    try w.print("This is the REPL for Monkey programming language.\n", .{});
+    try w.print("Feel free to type commands or 'quit;'\n", .{});
+    try buf.flush();
 
-    var t = l.nextToken();
-    std.log.debug("{?}", .{t});
-    t = l.nextToken();
-    std.log.debug("{?}", .{t});
-    t = l.nextToken();
-    std.log.debug("{?}", .{t});
-    t = l.nextToken();
-    std.log.debug("{?}", .{t});
-}
+    try repl.Repl.start(stdin, stdout);
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+    try w.print("\nMay your trip be as enjoyable as finding extra bananas at the bottom of the bag!\n", .{});
+    try buf.flush();
 }
