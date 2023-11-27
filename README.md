@@ -3,12 +3,14 @@
 ## Monkey Islang
 
 The **Zanzibar Red Colobus** is a monkey endemic to Unguja, the main island of the Zanzibar Archipelago.
-The name was chosen by reference to [Monkeylang](https://monkeylang.org/). And as you probably notice its name starts with a 'Z' and its a reference to [Ziglang](https://ziglang.org/).
+The name was chosen by reference to [Monkeylang](https://monkeylang.org/). And as you probably notice its
+name starts with a 'Z' and its a reference to [Ziglang](https://ziglang.org/).
 
-Monkey is a programming language that you can build yourself by reading through [Writing An Interpreter In Go](https://interpreterbook.com/) and [Writing A Compiler In Go](https://compilerbook.com/).
-So let's give it a try...
+Monkey is a programming language that you can build yourself by reading through
+[Writing An Interpreter In Go](https://interpreterbook.com/) and
+[Writing A Compiler In Go](https://compilerbook.com/). So let's give it a try...
 
-So [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Monkey](https://monkeylang.org/) in [Zig](https://ziglang.org/)
+Thus [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Monkey](https://monkeylang.org/) in [Zig](https://ziglang.org/)
 
 ## Travel to Monkey Islang
 
@@ -31,8 +33,8 @@ May your trip be as enjoyable as finding extra bananas at the bottom of the bag!
 ```
 
 - We will visit
-  - [x] **lexer** islang
-  - [ ] **parser** islang
+  - [x] **Lexer** islang
+  - [ ] **Parser** islang
   - [ ] **AST** islang
-  - [ ] **internal object system** islang
-  - [ ] **evaluator** islang
+  - [ ] **IOS** islang also known as Internal Object System islang
+  - [ ] **Evaluator** islang
