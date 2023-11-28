@@ -17,10 +17,46 @@
 //!   - let <identifier> = <expression>;
 const std = @import("std");
 
-pub const Statement = struct {};
+// Let's create a Node interface. Each node in our AST has to
+// implement it.
+pub const Node = struct {
+    tokenLiteralFn: *const fn (*Node) []const u8,
+
+    pub fn tokenLiteral(self: *Node) []const u8 {
+        return self.tokenLiteralFn(self);
+    }
+};
+
+pub const Statement = struct {
+    node: Node,
+
+    fn init() Statement {
+        .{ .node = Node{ .tokenLiteralFn = tokenLiteral } };
+    }
+
+    fn tokenLiteral(node: *Node) []const u8 {
+        const self = @fieldParentPtr(Statement, "node", node);
+        _ = self;
+        @panic("tokenLiteral not implemented for Statement");
+    }
+};
+
+pub const Expression = struct {
+    node: Node,
+
+    fn init() Expression {
+        .{ .node = Node{ .tokenLiteralFn = tokenLiteral } };
+    }
+
+    fn tokenLiteral(node: *Node) []const u8 {
+        const self = @fieldParentPtr(Expression, "node", node);
+        _ = self;
+        @panic("tokenLiteral not implemented for Expression");
+    }
+};
 
 // Will be the root of the AST
-pub const AstProgram = struct {
+pub const Program = struct {
     statements: std.ArrayList(Statement),
 };
 
