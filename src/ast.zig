@@ -39,15 +39,15 @@ pub const LetStatement = struct {
     value: Expression = undefined,
     node: Node,
 
-    fn init(t: token.Token) Statement {
-        .{
+    pub fn init(t: token.Token) LetStatement {
+        return .{
             .token = t,
             .node = Node{ .tokenLiteralFn = tokenLiteral },
         };
     }
 
     fn tokenLiteral(node: *Node) []const u8 {
-        const self = @fieldParentPtr(Statement, "node", node);
+        const self = @fieldParentPtr(LetStatement, "node", node);
         _ = self;
         @panic("tokenLiteral not implemented for Statement");
     }
@@ -58,7 +58,7 @@ pub const Expression = struct {
     node: Node,
 
     fn init() Expression {
-        .{ .node = Node{ .tokenLiteralFn = tokenLiteral } };
+        return .{ .node = Node{ .tokenLiteralFn = tokenLiteral } };
     }
 
     fn tokenLiteral(node: *Node) []const u8 {
@@ -79,7 +79,7 @@ pub const Program = struct {
     node: Node,
 
     pub fn init(allocator: std.mem.Allocator) Program {
-        .{
+        return .{
             .statements = std.ArrayList(Statement).init(allocator),
             .node = Node{ .tokenLiteralFn = tokenLiteral },
         };

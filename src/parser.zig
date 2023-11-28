@@ -27,12 +27,12 @@ const Parser = struct {
     }
 
     // It is up to the caller to call deinit on the return AST program
-    pub fn parseProgam(self: *Parser) ast.Program {
+    pub fn parseProgam(self: *Parser) !ast.Program {
         var program = ast.Program.init(self.allocator);
 
         while (self.cur_token.type != token.TokenType.EOF) : (self.nextToken()) {
             if (self.parseStatement()) |stmt| {
-                try self.statements.append(stmt);
+                try program.statements.append(stmt);
             }
         }
 
@@ -92,11 +92,19 @@ const Parser = struct {
     }
 };
 
-test "simple statement" {
-    const input = "let a = 10;";
+test "let statement" {
+    const input =
+        \\ let x = 5;
+        \\ let y = 10;
+        \\ let foobar = 1234;
+    ;
+
     var l = try lexer.Lexer.new(std.testing.allocator, input);
     defer l.free();
 
     var p = Parser.create(std.testing.allocator, &l);
     defer p.destroy();
+
+    var prog = try p.parseProgam();
+    defer prog.deinit();
 }
