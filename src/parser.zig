@@ -4,17 +4,15 @@ const lexer = @import("lexer.zig");
 const ast = @import("ast.zig");
 
 const Parser = struct {
-    allocator: std.mem.Allocator,
+    allocator: std.mem.Allocator, // Used when creating AST program
     l: *lexer.Lexer,
     cur_token: token.Token = undefined,
     peek_token: token.Token = undefined,
-    statements: std.ArrayList(ast.Statement),
 
     pub fn create(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
         var p: Parser = .{
             .l = l,
             .allocator = allocator,
-            .statements = std.ArrayList(ast.Statement).init(allocator),
         };
 
         // Read two tokens, so cur_token and peek_token are both set.
@@ -28,16 +26,17 @@ const Parser = struct {
         _ = self;
     }
 
-    pub fn parseProgam(self: *Parser) !ast.Program {
+    // It is up to the caller to call deinit on the return AST program
+    pub fn parseProgam(self: *Parser) ast.Program {
+        var program = ast.Program.init(self.allocator);
+
         while (self.cur_token.type != token.TokenType.EOF) : (self.nextToken()) {
             if (self.parseStatement()) |stmt| {
                 try self.statements.append(stmt);
             }
         }
 
-        return .{
-            .statements = self.statements,
-        };
+        return program;
     }
 
     fn nextToken(self: *Parser) void {
@@ -47,7 +46,7 @@ const Parser = struct {
 
     fn parseStatement(self: *Parser) ?ast.Statement {
         _ = self;
-        @panic("not implemented");
+        @panic("parseStatement not implemented");
     }
 };
 
