@@ -58,6 +58,24 @@ pub const Expression = struct {
 // Will be the root of the AST
 pub const Program = struct {
     statements: std.ArrayList(Statement),
+    node: Node,
+
+    pub fn init(allocator: std.mem.Allocator) Program {
+        .{
+            .statements = std.ArrayList(Statement).init(allocator),
+            .node = Node{ .tokenLiteralFn = tokenLiteral },
+        };
+    }
+
+    pub fn deinit(self: *Program) void {
+        self.statements.deinit();
+    }
+
+    fn tokenLiteral(node: *Node) []const u8 {
+        const self = @fieldParentPtr(Expression, "node", node);
+        _ = self;
+        @panic("tokenLiteral not implemented for Program");
+    }
 };
 
 test "simple" {}
