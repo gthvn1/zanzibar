@@ -16,6 +16,7 @@
 //! This are let statement and the have the following form:
 //!   - let <identifier> = <expression>;
 const std = @import("std");
+const token = @import("token.zig");
 
 // Let's create a Node interface. Each node in our AST has to
 // implement it.
@@ -27,11 +28,22 @@ pub const Node = struct {
     }
 };
 
-pub const Statement = struct {
+pub const Statement = union {
+    let_statement: ?LetStatement,
+};
+
+// Statement
+pub const LetStatement = struct {
+    token: token.Token, // the token.LET
+    name: Identifier = undefined,
+    value: Expression = undefined,
     node: Node,
 
-    fn init() Statement {
-        .{ .node = Node{ .tokenLiteralFn = tokenLiteral } };
+    fn init(t: token.Token) Statement {
+        .{
+            .token = t,
+            .node = Node{ .tokenLiteralFn = tokenLiteral },
+        };
     }
 
     fn tokenLiteral(node: *Node) []const u8 {
@@ -41,6 +53,7 @@ pub const Statement = struct {
     }
 };
 
+// Expression
 pub const Expression = struct {
     node: Node,
 
@@ -53,6 +66,11 @@ pub const Expression = struct {
         _ = self;
         @panic("tokenLiteral not implemented for Expression");
     }
+};
+
+pub const Identifier = struct {
+    token: token.Token,
+    value: []u8,
 };
 
 // Will be the root of the AST

@@ -45,8 +45,50 @@ const Parser = struct {
     }
 
     fn parseStatement(self: *Parser) ?ast.Statement {
-        _ = self;
-        @panic("parseStatement not implemented");
+        return switch (self.cur_token.type) {
+            token.TokenType.LET => .{ .let_statement = self.parseLetStatement() },
+            else => null,
+        };
+    }
+
+    fn parseLetStatement(self: *Parser) ?ast.LetStatement {
+        var stmt: ast.LetStatement = ast.LetStatement.init(self.cur_token);
+
+        if (!self.expectPeek(token.TokenType.IDENT)) {
+            return null;
+        }
+
+        stmt.name = ast.Identifier{
+            .token = self.cur_token,
+            .value = self.cur_token.literal,
+        };
+
+        if (!self.expectPeek(token.TokenType.ASSIGN)) {
+            return null;
+        }
+
+        // TODO: we're skipping the expressions until we encounter
+        // a semicolon
+        while (!self.curTokenIs(token.TokenType.SEMICOLON))
+            self.nextToken();
+
+        return stmt;
+    }
+
+    fn curTokenIs(self: *Parser, tt: token.TokenType) bool {
+        return self.cur_token.type == tt;
+    }
+
+    fn peekTokenIs(self: *Parser, tt: token.TokenType) bool {
+        return self.peek_token.type == tt;
+    }
+
+    fn expectPeek(self: *Parser, tt: token.TokenType) bool {
+        if (self.peekTokenIs(tt)) {
+            self.nextToken();
+            return true;
+        }
+        return false;
     }
 };
 
