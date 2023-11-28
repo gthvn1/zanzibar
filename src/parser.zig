@@ -45,7 +45,7 @@ const Parser = struct {
         _ = self;
     }
 
-    pub fn parseProgam(self: *Parser) !ast.AstProgram {
+    pub fn parseProgam(self: *Parser) !ast.Program {
         while (self.cur_token.type != token.TokenType.EOF) : (self.nextToken()) {
             if (self.parseStatement()) |stmt| {
                 try self.statements.append(stmt);
