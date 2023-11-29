@@ -139,7 +139,7 @@ test "error in let statement" {
     var prog = try p.parseProgam();
     defer prog.deinit();
 
-    try std.testing.expectEqual(prog.statements.items.len, 1);
+    try std.testing.expectEqual(@as(usize, 1), prog.statements.items.len);
 
     const expected_error = "expected next token to be '=', got 'IF' instead";
     for (p.errors.items) |err| {
@@ -164,12 +164,12 @@ test "return statement" {
     defer prog.deinit();
 
     // We expect no errors
-    try std.testing.expectEqual(p.errors.items.len, 0);
-    try std.testing.expectEqual(prog.statements.items.len, 2);
+    try std.testing.expectEqual(@as(usize, 0), p.errors.items.len);
+    try std.testing.expectEqual(@as(usize, 2), prog.statements.items.len);
 
     for (prog.statements.items) |item| {
         if (item.return_stmt) |stmt| {
-            try std.testing.expectEqualSlices(u8, stmt.token.literal, "return");
+            try std.testing.expectEqualSlices(u8, "return", stmt.token.literal);
         }
     }
 }
@@ -190,14 +190,14 @@ test "let statement" {
     var prog = try p.parseProgam();
     defer prog.deinit();
 
-    try std.testing.expectEqual(p.errors.items.len, 0);
-    try std.testing.expectEqual(prog.statements.items.len, 3);
+    try std.testing.expectEqual(@as(usize, 0), p.errors.items.len);
+    try std.testing.expectEqual(@as(usize, 3), prog.statements.items.len);
 
     const expected_ident = [_][]const u8{ "x", "y", "foobar" };
 
     for (prog.statements.items, 0..) |item, idx| {
         if (item.let_stmt) |stmt| {
-            try std.testing.expectEqualSlices(u8, stmt.name.value, expected_ident[idx]);
+            try std.testing.expectEqualSlices(u8, expected_ident[idx], stmt.name.value);
         }
     }
 }
