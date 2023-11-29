@@ -58,6 +58,8 @@ const Parser = struct {
         };
     }
 
+    // This are let statement and they have the following form:
+    //   - let <identifier> = <expression>;
     fn parseLetStatement(self: *Parser) ?ast.LetStatement {
         var stmt: ast.LetStatement = ast.LetStatement.init(self.cur_token);
 

@@ -6,15 +6,7 @@
 //!     - Notation used is Backus-Naur Form (BNF)
 //!   - We can do top-down or bottom-up parsing
 //!     - We use "Top Down operator precedence" (Pratt parser)
-//!
-//! Let's start with variable bindings that are statements:
-//!   - let x = 5;
-//!   - let foobar = add(2, 3);
-//!   - let foo = bar;
-//!
-//!
-//! This are let statement and the have the following form:
-//!   - let <identifier> = <expression>;
+
 const std = @import("std");
 const token = @import("token.zig");
 
