@@ -53,12 +53,12 @@ const Parser = struct {
 
     fn parseStatement(self: *Parser) ?ast.Statement {
         return switch (self.cur_token.type) {
-            token.TokenType.LET => .{ .let_statement = self.parseLetStatement() },
+            token.TokenType.LET => .{ .let_stmt = self.parseLetStatement() },
+            token.TokenType.RETURN => .{ .return_stmt = self.parseReturnStatement() },
             else => null,
         };
     }
 
-    // This are let statement and they have the following form:
     //   - let <identifier> = <expression>;
     fn parseLetStatement(self: *Parser) ?ast.LetStatement {
         var stmt: ast.LetStatement = ast.LetStatement.init(self.cur_token);
@@ -75,6 +75,20 @@ const Parser = struct {
         if (!self.expectPeek(token.TokenType.ASSIGN)) {
             return null;
         }
+
+        // TODO: we're skipping the expressions until we encounter
+        // a semicolon
+        while (!self.curTokenIs(token.TokenType.SEMICOLON))
+            self.nextToken();
+
+        return stmt;
+    }
+
+    //   - return <expression>;
+    fn parseReturnStatement(self: *Parser) ?ast.ReturnStatement {
+        var stmt: ast.ReturnStatement = ast.ReturnStatement.init(self.cur_token);
+
+        self.nextToken();
 
         // TODO: we're skipping the expressions until we encounter
         // a semicolon
@@ -124,10 +138,38 @@ test "error in let statement" {
     var prog = try p.parseProgam();
     defer prog.deinit();
 
+    try std.testing.expectEqual(prog.statements.items.len, 1);
+
     const expected_error = "expected next token to be '=', got 'IF' instead";
     for (p.errors.items) |err| {
         // There is only one error...
         try std.testing.expectEqualSlices(u8, err, expected_error);
+    }
+}
+
+test "return statement" {
+    const input =
+        \\ return 5;
+        \\ return 10;
+    ;
+
+    var l = try lexer.Lexer.new(std.testing.allocator, input);
+    defer l.free();
+
+    var p = Parser.create(std.testing.allocator, &l);
+    defer p.destroy();
+
+    var prog = try p.parseProgam();
+    defer prog.deinit();
+
+    // We expect no errors
+    try std.testing.expectEqual(p.errors.items.len, 0);
+    try std.testing.expectEqual(prog.statements.items.len, 2);
+
+    for (prog.statements.items) |item| {
+        if (item.return_stmt) |stmt| {
+            try std.testing.expectEqualSlices(u8, stmt.token.literal, "return");
+        }
     }
 }
 
@@ -147,12 +189,13 @@ test "let statement" {
     var prog = try p.parseProgam();
     defer prog.deinit();
 
+    try std.testing.expectEqual(p.errors.items.len, 0);
     try std.testing.expectEqual(prog.statements.items.len, 3);
 
     const expected_ident = [_][]const u8{ "x", "y", "foobar" };
 
     for (prog.statements.items, 0..) |item, idx| {
-        if (item.let_statement) |stmt| {
+        if (item.let_stmt) |stmt| {
             try std.testing.expectEqualSlices(u8, stmt.name.value, expected_ident[idx]);
         }
     }
