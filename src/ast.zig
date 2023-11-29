@@ -18,16 +18,6 @@
 const std = @import("std");
 const token = @import("token.zig");
 
-// Let's create a Node interface. Each node in our AST has to
-// implement it.
-pub const Node = struct {
-    tokenLiteralFn: *const fn (*Node) []const u8,
-
-    pub fn tokenLiteral(self: *Node) []const u8 {
-        return self.tokenLiteralFn(self);
-    }
-};
-
 pub const Statement = union {
     let_statement: ?LetStatement,
 };
@@ -37,36 +27,14 @@ pub const LetStatement = struct {
     token: token.Token, // the token.LET
     name: Identifier = undefined,
     value: Expression = undefined,
-    node: Node,
 
     pub fn init(t: token.Token) LetStatement {
-        return .{
-            .token = t,
-            .node = Node{ .tokenLiteralFn = tokenLiteral },
-        };
-    }
-
-    fn tokenLiteral(node: *Node) []const u8 {
-        const self = @fieldParentPtr(LetStatement, "node", node);
-        _ = self;
-        @panic("tokenLiteral not implemented for Statement");
+        return .{ .token = t };
     }
 };
 
 // Expression
-pub const Expression = struct {
-    node: Node,
-
-    fn init() Expression {
-        return .{ .node = Node{ .tokenLiteralFn = tokenLiteral } };
-    }
-
-    fn tokenLiteral(node: *Node) []const u8 {
-        const self = @fieldParentPtr(Expression, "node", node);
-        _ = self;
-        @panic("tokenLiteral not implemented for Expression");
-    }
-};
+pub const Expression = struct {};
 
 pub const Identifier = struct {
     token: token.Token,
@@ -76,24 +44,16 @@ pub const Identifier = struct {
 // Will be the root of the AST
 pub const Program = struct {
     statements: std.ArrayList(Statement),
-    node: Node,
 
     pub fn init(allocator: std.mem.Allocator) Program {
         return .{
             .statements = std.ArrayList(Statement).init(allocator),
-            .node = Node{ .tokenLiteralFn = tokenLiteral },
         };
     }
 
     pub fn deinit(self: *Program) void {
         self.statements.deinit();
     }
-
-    fn tokenLiteral(node: *Node) []const u8 {
-        const self = @fieldParentPtr(Expression, "node", node);
-        _ = self;
-        @panic("tokenLiteral not implemented for Program");
-    }
 };
 
-test "simple" {}
+test "nop" {}

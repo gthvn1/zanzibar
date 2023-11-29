@@ -6,20 +6,16 @@ const ast = @import("ast.zig");
 const Parser = struct {
     allocator: std.mem.Allocator, // Used when creating AST program
     l: *lexer.Lexer,
-    cur_token: token.Token = undefined,
-    peek_token: token.Token = undefined,
+    cur_token: token.Token,
+    peek_token: token.Token,
 
     pub fn create(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
-        var p: Parser = .{
+        return .{
             .l = l,
+            .cur_token = l.nextToken(),
+            .peek_token = l.nextToken(),
             .allocator = allocator,
         };
-
-        // Read two tokens, so cur_token and peek_token are both set.
-        p.nextToken();
-        p.nextToken();
-
-        return p;
     }
 
     pub fn destroy(self: *Parser) void {
@@ -107,4 +103,14 @@ test "let statement" {
 
     var prog = try p.parseProgam();
     defer prog.deinit();
+
+    try std.testing.expectEqual(prog.statements.items.len, 3);
+
+    const expected_ident = [_][]const u8{ "x", "y", "foobar" };
+
+    for (prog.statements.items, 0..) |item, idx| {
+        if (item.let_statement) |stmt| {
+            try std.testing.expectEqualSlices(u8, stmt.name.value, expected_ident[idx]);
+        }
+    }
 }
