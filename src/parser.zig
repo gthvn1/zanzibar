@@ -4,10 +4,11 @@ const lexer = @import("lexer.zig");
 const ast = @import("ast.zig");
 
 const Parser = struct {
-    allocator: std.mem.Allocator, // Used when creating AST program
+    allocator: std.mem.Allocator,
     l: *lexer.Lexer,
     cur_token: token.Token,
     peek_token: token.Token,
+    errors: std.ArrayList([]const u8),
 
     pub fn create(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
         return .{
@@ -15,11 +16,15 @@ const Parser = struct {
             .cur_token = l.nextToken(),
             .peek_token = l.nextToken(),
             .allocator = allocator,
+            .errors = std.ArrayList([]const u8).init(allocator),
         };
     }
 
     pub fn destroy(self: *Parser) void {
-        _ = self;
+        for (self.errors.items) |item| {
+            self.allocator.free(item);
+        }
+        self.errors.deinit();
     }
 
     // It is up to the caller to call deinit on the return AST program
@@ -33,6 +38,12 @@ const Parser = struct {
         }
 
         return program;
+    }
+
+    // err string is created using allocPrint so we are now
+    // owner of the allocated memory.
+    fn logError(self: *Parser, err: []const u8) !void {
+        try self.errors.append(err);
     }
 
     fn nextToken(self: *Parser) void {
@@ -84,9 +95,37 @@ const Parser = struct {
             self.nextToken();
             return true;
         }
+
+        // Log the error before returning false
+        const m = std.fmt.allocPrint(
+            self.allocator,
+            "expected next token to be '{s}', got '{s}' instead",
+            .{ tt.stringFromTokenType(), self.peek_token.type.stringFromTokenType() },
+        ) catch @panic("Failed to create string to log error");
+        self.logError(m) catch @panic("Failed to log error");
+
         return false;
     }
 };
+
+test "error in let statement" {
+    const input =
+        \\ let x if 5;
+    ;
+
+    var l = try lexer.Lexer.new(std.testing.allocator, input);
+    defer l.free();
+
+    var p = Parser.create(std.testing.allocator, &l);
+    defer p.destroy();
+
+    var prog = try p.parseProgam();
+    defer prog.deinit();
+
+    for (p.errors.items) |err| {
+        std.debug.print("[ERROR] {s}\n", .{err});
+    }
+}
 
 test "let statement" {
     const input =

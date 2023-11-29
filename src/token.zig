@@ -76,7 +76,7 @@ pub const TokenType = enum {
             .ASTERIX => "*",
             .SLASH => "/",
             .BANG => "!",
-            .LG => "<",
+            .LT => "<",
             .GT => ">",
             .EQ => "==",
             .NOT_EQ => "!=",
@@ -92,6 +92,11 @@ pub const TokenType = enum {
             // Keywords
             .FUNCTION => "FUNCTION",
             .LET => "LET",
+            .TRUE => "TRUE",
+            .FALSE => "FALSE",
+            .IF => "IF",
+            .ELSE => "ELSE",
+            .RETURN => "RETURN",
         };
     }
 };
