@@ -10,7 +10,13 @@
 const std = @import("std");
 const token = @import("token.zig");
 
-pub const Statement = union {
+const StatementType = enum {
+    let_stmt,
+    return_stmt,
+};
+
+// Using tagged union allows us to use with switch
+pub const Statement = union(StatementType) {
     let_stmt: ?LetStatement,
     return_stmt: ?ReturnStatement,
 };

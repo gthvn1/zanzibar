@@ -136,7 +136,7 @@ pub const Lexer = struct {
 };
 
 fn readExpect(l: *Lexer, expected_type: token.TokenType, expected_literal: []const u8) !void {
-    var read = l.nextToken();
+    const read = l.nextToken();
     try std.testing.expectEqual(read.type, expected_type);
     try std.testing.expectEqualStrings(read.literal, expected_literal);
 }

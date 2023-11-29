@@ -86,7 +86,8 @@ const Parser = struct {
 
     //   - return <expression>;
     fn parseReturnStatement(self: *Parser) ?ast.ReturnStatement {
-        var stmt: ast.ReturnStatement = ast.ReturnStatement.init(self.cur_token);
+        // TODO: Will become var when will update it with expression
+        const stmt: ast.ReturnStatement = ast.ReturnStatement.init(self.cur_token);
 
         self.nextToken();
 
