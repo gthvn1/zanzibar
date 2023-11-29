@@ -122,8 +122,10 @@ test "error in let statement" {
     var prog = try p.parseProgam();
     defer prog.deinit();
 
+    const expected_error = "expected next token to be '=', got 'IF' instead";
     for (p.errors.items) |err| {
-        std.debug.print("[ERROR] {s}\n", .{err});
+        // There is only one error...
+        try std.testing.expectEqualSlices(u8, err, expected_error);
     }
 }
 
