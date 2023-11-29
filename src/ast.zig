@@ -17,8 +17,14 @@ const StatementType = enum {
 
 // Using tagged union allows us to use with switch
 pub const Statement = union(StatementType) {
-    let_stmt: ?LetStatement,
-    return_stmt: ?ReturnStatement,
+    let_stmt: LetStatement,
+    return_stmt: ReturnStatement,
+
+    pub fn tokenLiteral(self: Statement) []u8 {
+        return switch (self) {
+            inline else => |stmt| stmt.tokenLiteral(),
+        };
+    }
 };
 
 // Statements
@@ -30,6 +36,10 @@ pub const LetStatement = struct {
     pub fn init(t: token.Token) LetStatement {
         return .{ .token = t };
     }
+
+    pub fn tokenLiteral(self: LetStatement) []u8 {
+        return self.token.literal;
+    }
 };
 
 pub const ReturnStatement = struct {
@@ -38,6 +48,10 @@ pub const ReturnStatement = struct {
 
     pub fn init(t: token.Token) ReturnStatement {
         return .{ .token = t };
+    }
+
+    pub fn tokenLiteral(self: ReturnStatement) []u8 {
+        return self.token.literal;
     }
 };
 

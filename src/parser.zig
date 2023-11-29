@@ -53,21 +53,21 @@ const Parser = struct {
 
     fn parseStatement(self: *Parser) ?ast.Statement {
         return switch (self.cur_token.type) {
-            token.TokenType.LET => .{ .let_stmt = self.parseLetStatement() },
-            token.TokenType.RETURN => .{ .return_stmt = self.parseReturnStatement() },
+            token.TokenType.LET => self.parseLetStatement(),
+            token.TokenType.RETURN => self.parseReturnStatement(),
             else => null,
         };
     }
 
     //   - let <identifier> = <expression>;
-    fn parseLetStatement(self: *Parser) ?ast.LetStatement {
-        var stmt: ast.LetStatement = ast.LetStatement.init(self.cur_token);
+    fn parseLetStatement(self: *Parser) ?ast.Statement {
+        var ls: ast.LetStatement = ast.LetStatement.init(self.cur_token);
 
         if (!self.expectPeek(token.TokenType.IDENT)) {
             return null;
         }
 
-        stmt.name = ast.Identifier{
+        ls.name = ast.Identifier{
             .token = self.cur_token,
             .value = self.cur_token.literal,
         };
@@ -81,13 +81,13 @@ const Parser = struct {
         while (!self.curTokenIs(token.TokenType.SEMICOLON))
             self.nextToken();
 
-        return stmt;
+        return .{ .let_stmt = ls };
     }
 
     //   - return <expression>;
-    fn parseReturnStatement(self: *Parser) ?ast.ReturnStatement {
+    fn parseReturnStatement(self: *Parser) ?ast.Statement {
         // TODO: Will become var when will update it with expression
-        const stmt: ast.ReturnStatement = ast.ReturnStatement.init(self.cur_token);
+        const rs: ast.ReturnStatement = ast.ReturnStatement.init(self.cur_token);
 
         self.nextToken();
 
@@ -96,7 +96,7 @@ const Parser = struct {
         while (!self.curTokenIs(token.TokenType.SEMICOLON))
             self.nextToken();
 
-        return stmt;
+        return .{ .return_stmt = rs };
     }
 
     fn curTokenIs(self: *Parser, tt: token.TokenType) bool {
@@ -139,7 +139,7 @@ test "error in let statement" {
     var prog = try p.parseProgam();
     defer prog.deinit();
 
-    try std.testing.expectEqual(@as(usize, 1), prog.statements.items.len);
+    try std.testing.expectEqual(@as(usize, 1), p.errors.items.len);
 
     const expected_error = "expected next token to be '=', got 'IF' instead";
     for (p.errors.items) |err| {
@@ -167,11 +167,8 @@ test "return statement" {
     try std.testing.expectEqual(@as(usize, 0), p.errors.items.len);
     try std.testing.expectEqual(@as(usize, 2), prog.statements.items.len);
 
-    for (prog.statements.items) |item| {
-        if (item.return_stmt) |stmt| {
-            try std.testing.expectEqualSlices(u8, "return", stmt.token.literal);
-        }
-    }
+    for (prog.statements.items) |stmt|
+        try std.testing.expectEqualSlices(u8, "return", stmt.tokenLiteral());
 }
 
 test "let statement" {
@@ -195,9 +192,10 @@ test "let statement" {
 
     const expected_ident = [_][]const u8{ "x", "y", "foobar" };
 
-    for (prog.statements.items, 0..) |item, idx| {
-        if (item.let_stmt) |stmt| {
-            try std.testing.expectEqualSlices(u8, expected_ident[idx], stmt.name.value);
+    for (prog.statements.items, 0..) |stmt, idx| {
+        switch (stmt) {
+            .let_stmt => try std.testing.expectEqualSlices(u8, expected_ident[idx], stmt.let_stmt.name.value),
+            else => unreachable,
         }
     }
 }
