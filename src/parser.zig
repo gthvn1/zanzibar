@@ -193,9 +193,10 @@ test "let statement" {
     const expected_ident = [_][]const u8{ "x", "y", "foobar" };
 
     for (prog.statements.items, 0..) |stmt, idx| {
-        switch (stmt) {
-            .let_stmt => try std.testing.expectEqualSlices(u8, expected_ident[idx], stmt.let_stmt.name.value),
-            else => unreachable,
+        if (stmt.nameLiteral()) |ident| {
+            try std.testing.expectEqualSlices(u8, expected_ident[idx], ident);
+        } else {
+            try std.testing.expectEqualSlices(u8, "", "not a let statement");
         }
     }
 }
