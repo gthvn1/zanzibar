@@ -4,11 +4,37 @@ const lexer = @import("lexer.zig");
 const ast = @import("ast.zig");
 
 const Parser = struct {
+    const Precedence = enum(u4) {
+        lowest = 1,
+        equals, // ==
+        lessgreater, // > or <
+        sum, // +
+        product, // *
+        prefix, // -X or !X
+        call, // myFunction(X)
+    };
+
+    // We defined default function to initialize enum array to avoid
+    // segmentation fault in case of called without being set.
+    fn default_prefix_parse_fn() ?ast.Expression {
+        return null;
+    }
+
+    fn default_infix_parse_fn(e: ast.Expression) ?ast.Expression {
+        _ = e;
+        return null;
+    }
+
+    const PrefixParseFn = *const fn () ?ast.Expression;
+    const InfixParseFn = *const fn (ast.Expression) ?ast.Expression;
+
     allocator: std.mem.Allocator,
     l: *lexer.Lexer,
     cur_token: token.Token,
     peek_token: token.Token,
     errors: std.ArrayList([]const u8),
+    prefix_parse_fns: std.EnumArray(token.TokenType, PrefixParseFn),
+    infix_parse_fns: std.EnumArray(token.TokenType, InfixParseFn),
 
     pub fn create(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
         return .{
@@ -17,6 +43,8 @@ const Parser = struct {
             .peek_token = l.nextToken(),
             .allocator = allocator,
             .errors = std.ArrayList([]const u8).init(allocator),
+            .prefix_parse_fns = std.EnumArray(token.TokenType, PrefixParseFn).initFill(&default_prefix_parse_fn),
+            .infix_parse_fns = std.EnumArray(token.TokenType, InfixParseFn).initFill(&default_infix_parse_fn),
         };
     }
 
@@ -40,6 +68,14 @@ const Parser = struct {
         return program;
     }
 
+    fn registerPrefix(self: *Parser, tt: token.TokenType, f: *PrefixParseFn) void {
+        self.prefix_parse_fns.set(tt, f);
+    }
+
+    fn registerInfix(self: *Parser, tt: token.TokenType, f: *InfixParseFn) void {
+        self.infix_parse_fns.set(tt, f);
+    }
+
     // err string is created using allocPrint so we are now
     // owner of the allocated memory.
     fn logError(self: *Parser, err: []const u8) !void {
@@ -55,7 +91,7 @@ const Parser = struct {
         return switch (self.cur_token.type) {
             token.TokenType.LET => self.parseLetStatement(),
             token.TokenType.RETURN => self.parseReturnStatement(),
-            else => null,
+            else => self.parseExpressionStatement(),
         };
     }
 
@@ -97,6 +133,31 @@ const Parser = struct {
             self.nextToken();
 
         return .{ .return_stmt = rs };
+    }
+
+    fn parseExpressionStatement(self: *Parser) ?ast.Statement {
+        var es: ast.ExpressionStatement = ast.ExpressionStatement.init(self.cur_token);
+
+        if (self.parseExpression(Precedence.lowest)) |expr| {
+            es.expression = expr;
+        } else {
+            std.debug.print("got null from parse expression\n", .{});
+            return null;
+        }
+
+        if (self.peekTokenIs(token.TokenType.SEMICOLON)) {
+            self.nextToken();
+        }
+
+        return .{ .expression_stmt = es };
+    }
+
+    fn parseExpression(self: *Parser, p: Precedence) ?ast.Expression {
+        _ = p;
+        const prefix_fn = self.prefix_parse_fns.get(self.cur_token.type);
+        const expr = prefix_fn();
+
+        return expr;
     }
 
     fn curTokenIs(self: *Parser, tt: token.TokenType) bool {
