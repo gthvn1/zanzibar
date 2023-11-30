@@ -193,6 +193,11 @@ test "let statement" {
     const expected_ident = [_][]const u8{ "x", "y", "foobar" };
 
     for (prog.statements.items, 0..) |stmt, idx| {
+        // // Keep this comment to show how print statement...
+        // const str_debug = try stmt.string(std.testing.allocator);
+        // defer std.testing.allocator.free(str_debug);
+        // std.debug.print("{s}\n", .{str_debug});
+
         if (stmt.nameLiteral()) |ident| {
             try std.testing.expectEqualSlices(u8, expected_ident[idx], ident);
         } else {

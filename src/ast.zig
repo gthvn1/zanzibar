@@ -13,16 +13,27 @@ const token = @import("token.zig");
 const StatementType = enum {
     let_stmt,
     return_stmt,
+    expression_stmt,
 };
 
 // Using tagged union allows us to use with switch
 pub const Statement = union(StatementType) {
     let_stmt: LetStatement,
     return_stmt: ReturnStatement,
+    expression_stmt: ExpressionStatement,
 
     pub fn tokenLiteral(self: Statement) []u8 {
         return switch (self) {
             inline else => |stmt| stmt.tokenLiteral(),
+        };
+    }
+
+    // Use to print statement to help the debugging
+    // It allocates memory for the string, it is up to the caller
+    // to free it.
+    pub fn string(self: Statement, allocator: std.mem.Allocator) ![]u8 {
+        return switch (self) {
+            inline else => |stmt| try stmt.string(allocator),
         };
     }
 
@@ -48,6 +59,16 @@ pub const LetStatement = struct {
         return self.token.literal;
     }
 
+    pub fn string(self: LetStatement, allocator: std.mem.Allocator) ![]u8 {
+        // TODO: currently value is not updated by the parser. We will
+        //       update it when expression are parsed...
+        return std.fmt.allocPrint(
+            allocator,
+            "{s} {s} = {s};",
+            .{ self.token.literal, self.name.value, "<expression is not parsed yet>" },
+        );
+    }
+
     pub fn nameLiteral(self: LetStatement) []u8 {
         return self.name.value;
     }
@@ -64,9 +85,49 @@ pub const ReturnStatement = struct {
     pub fn tokenLiteral(self: ReturnStatement) []u8 {
         return self.token.literal;
     }
+
+    pub fn string(self: ReturnStatement, allocator: std.mem.Allocator) ![]u8 {
+        // TODO: currently value is not updated by the parser. We will
+        //       update it when expression are parsed...
+        return std.fmt.allocPrint(
+            allocator,
+            "{s} {s}",
+            .{ self.token.literal, "<expression is not parsed yet>" },
+        );
+    }
+};
+
+pub const ExpressionStatement = struct {
+    token: token.Token,
+    value: Expression = undefined,
+
+    pub fn init(t: token.Token) ExpressionStatement {
+        return .{ .token = t };
+    }
+
+    pub fn tokenLiteral(self: ExpressionStatement) []u8 {
+        return self.token.literal;
+    }
+
+    pub fn string(self: ExpressionStatement, allocator: std.mem.Allocator) ![]u8 {
+        _ = self;
+        // TODO: currently value is not updated by the parser. We will
+        //       update it when expression are parsed...
+        return std.fmt.allocPrint(allocator, "<expression is not yet parsed>", .{});
+    }
 };
 
 // Expression
+// In Monkey everything besides let and return is an expression.
+// There is many varieties of expressions:
+//  5 + 4
+//  foo == bare
+//  5 * ( 5 + 5)
+// --a
+// b++
+// add(2, 3)
+// fn(x, y) {return x + y}; // function are first class citizen
+// ...
 pub const Expression = struct {};
 
 pub const Identifier = struct {
