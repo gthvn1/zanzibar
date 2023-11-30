@@ -49,7 +49,7 @@ pub const Statement = union(StatementType) {
 pub const LetStatement = struct {
     token: token.Token, // the token.LET
     name: Identifier = undefined,
-    value: Expression = undefined,
+    expression: Expression = undefined,
 
     pub fn init(t: token.Token) LetStatement {
         return .{ .token = t };
@@ -76,7 +76,7 @@ pub const LetStatement = struct {
 
 pub const ReturnStatement = struct {
     token: token.Token,
-    value: Expression = undefined,
+    expression: Expression = undefined,
 
     pub fn init(t: token.Token) ReturnStatement {
         return .{ .token = t };
@@ -99,7 +99,7 @@ pub const ReturnStatement = struct {
 
 pub const ExpressionStatement = struct {
     token: token.Token,
-    value: Expression = undefined,
+    expression: Expression = undefined,
 
     pub fn init(t: token.Token) ExpressionStatement {
         return .{ .token = t };
