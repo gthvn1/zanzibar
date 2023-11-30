@@ -25,6 +25,13 @@ pub const Statement = union(StatementType) {
             inline else => |stmt| stmt.tokenLiteral(),
         };
     }
+
+    pub fn nameLiteral(self: Statement) ?[]u8 {
+        return switch (self) {
+            .let_stmt => |stmt| stmt.nameLiteral(),
+            inline else => null,
+        };
+    }
 };
 
 // Statements
@@ -39,6 +46,10 @@ pub const LetStatement = struct {
 
     pub fn tokenLiteral(self: LetStatement) []u8 {
         return self.token.literal;
+    }
+
+    pub fn nameLiteral(self: LetStatement) []u8 {
+        return self.name.value;
     }
 };
 
