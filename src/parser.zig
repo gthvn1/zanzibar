@@ -196,7 +196,8 @@ test "let statement" {
         if (stmt.nameLiteral()) |ident| {
             try std.testing.expectEqualSlices(u8, expected_ident[idx], ident);
         } else {
-            try std.testing.expectEqualSlices(u8, "", "not a let statement");
+            // We shouldn't be here so failed with explicit message
+            try std.testing.expectEqualSlices(u8, "", "not a let statement, what are we doing here?");
         }
     }
 }
