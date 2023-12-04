@@ -128,7 +128,13 @@ pub const ExpressionStatement = struct {
 // add(2, 3)
 // fn(x, y) {return x + y}; // function are first class citizen
 // ...
-pub const Expression = struct {};
+const ExpressionType = enum {
+    identifier,
+};
+
+pub const Expression = union(ExpressionType) {
+    identifier: Identifier,
+};
 
 pub const Identifier = struct {
     token: token.Token,
