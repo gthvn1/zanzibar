@@ -14,37 +14,31 @@ const Parser = struct {
         call, // myFunction(X)
     };
 
-    // We defined default function to initialize enum array to avoid
-    // segmentation fault in case of called without being set.
-    fn default_prefix_parse_fn() ?ast.Expression {
-        return null;
-    }
-
-    fn default_infix_parse_fn(e: ast.Expression) ?ast.Expression {
-        _ = e;
-        return null;
-    }
-
-    const PrefixParseFn = *const fn () ?ast.Expression;
-    const InfixParseFn = *const fn (ast.Expression) ?ast.Expression;
+    const PrefixParseFn = *const fn (*Parser) ?ast.Expression;
+    const InfixParseFn = *const fn (*Parser, ast.Expression) ?ast.Expression;
 
     allocator: std.mem.Allocator,
     l: *lexer.Lexer,
     cur_token: token.Token,
     peek_token: token.Token,
     errors: std.ArrayList([]const u8),
-    prefix_parse_fns: std.EnumArray(token.TokenType, PrefixParseFn),
-    infix_parse_fns: std.EnumArray(token.TokenType, InfixParseFn),
+    prefix_parse_fns: std.EnumArray(token.TokenType, ?PrefixParseFn),
+    infix_parse_fns: std.EnumArray(token.TokenType, ?InfixParseFn),
 
     pub fn create(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
+        var ppf = std.EnumArray(token.TokenType, ?PrefixParseFn).initFill(null);
+        var ipf = std.EnumArray(token.TokenType, ?InfixParseFn).initFill(null);
+
+        ppf.set(token.TokenType.IDENT, parseIdentifier);
+
         return .{
             .l = l,
             .cur_token = l.nextToken(),
             .peek_token = l.nextToken(),
             .allocator = allocator,
             .errors = std.ArrayList([]const u8).init(allocator),
-            .prefix_parse_fns = std.EnumArray(token.TokenType, PrefixParseFn).initFill(&default_prefix_parse_fn),
-            .infix_parse_fns = std.EnumArray(token.TokenType, InfixParseFn).initFill(&default_infix_parse_fn),
+            .prefix_parse_fns = ppf,
+            .infix_parse_fns = ipf,
         };
     }
 
@@ -68,11 +62,11 @@ const Parser = struct {
         return program;
     }
 
-    fn registerPrefix(self: *Parser, tt: token.TokenType, f: *PrefixParseFn) void {
+    fn registerPrefix(self: *Parser, tt: token.TokenType, f: PrefixParseFn) void {
         self.prefix_parse_fns.set(tt, f);
     }
 
-    fn registerInfix(self: *Parser, tt: token.TokenType, f: *InfixParseFn) void {
+    fn registerInfix(self: *Parser, tt: token.TokenType, f: InfixParseFn) void {
         self.infix_parse_fns.set(tt, f);
     }
 
@@ -155,9 +149,18 @@ const Parser = struct {
     fn parseExpression(self: *Parser, p: Precedence) ?ast.Expression {
         _ = p;
         const prefix_fn = self.prefix_parse_fns.get(self.cur_token.type);
-        const expr = prefix_fn();
 
-        return expr;
+        // Check if a function is associated with token
+        if (prefix_fn) |pfn| {
+            const left_expr = pfn(self);
+            return left_expr;
+        }
+
+        return null;
+    }
+
+    fn parseIdentifier(self: *Parser) ?ast.Expression {
+        return .{ .identifier = ast.Identifier{ .token = self.cur_token, .value = self.cur_token.literal } };
     }
 
     fn curTokenIs(self: *Parser, tt: token.TokenType) bool {
