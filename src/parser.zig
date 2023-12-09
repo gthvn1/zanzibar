@@ -25,11 +25,12 @@ const Parser = struct {
     prefix_parse_fns: std.EnumArray(token.TokenType, ?PrefixParseFn),
     infix_parse_fns: std.EnumArray(token.TokenType, ?InfixParseFn),
 
-    pub fn create(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
+    pub fn new(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
         var ppf = std.EnumArray(token.TokenType, ?PrefixParseFn).initFill(null);
         var ipf = std.EnumArray(token.TokenType, ?InfixParseFn).initFill(null);
 
         ppf.set(token.TokenType.IDENT, parseIdentifier);
+        ppf.set(token.TokenType.INT, parseIntegerLiteral);
 
         return .{
             .l = l,
@@ -42,7 +43,7 @@ const Parser = struct {
         };
     }
 
-    pub fn destroy(self: *Parser) void {
+    pub fn free(self: *Parser) void {
         for (self.errors.items) |item| {
             self.allocator.free(item);
         }
@@ -150,7 +151,7 @@ const Parser = struct {
         _ = p;
         const prefix_fn = self.prefix_parse_fns.get(self.cur_token.type);
 
-        // Check if a function is associated with token
+        // Check if a function is associated with token.
         if (prefix_fn) |pfn| {
             const left_expr = pfn(self);
             return left_expr;
@@ -161,6 +162,15 @@ const Parser = struct {
 
     fn parseIdentifier(self: *Parser) ?ast.Expression {
         return .{ .identifier = ast.Identifier{ .token = self.cur_token, .value = self.cur_token.literal } };
+    }
+
+    fn parseIntegerLiteral(self: *Parser) ?ast.Expression {
+        const value = std.fmt.parseInt(i64, self.cur_token.literal, 10) catch return null;
+
+        return .{ .integer_literal = ast.IntegerLiteral{
+            .token = self.cur_token,
+            .value = value,
+        } };
     }
 
     fn curTokenIs(self: *Parser, tt: token.TokenType) bool {
@@ -189,6 +199,24 @@ const Parser = struct {
     }
 };
 
+test "literal expression" {
+    const input = "5;";
+
+    var l = try lexer.Lexer.new(std.testing.allocator, input);
+    defer l.free();
+
+    var p = Parser.new(std.testing.allocator, &l);
+    defer p.free();
+
+    var prog = try p.parseProgam();
+    defer prog.deinit();
+
+    // We expect no error
+    try std.testing.expectEqual(@as(usize, 0), p.errors.items.len);
+    // We have only one statement
+    try std.testing.expectEqual(@as(usize, 1), prog.statements.items.len);
+}
+
 test "error in let statement" {
     const input =
         \\ let x if 5;
@@ -197,8 +225,8 @@ test "error in let statement" {
     var l = try lexer.Lexer.new(std.testing.allocator, input);
     defer l.free();
 
-    var p = Parser.create(std.testing.allocator, &l);
-    defer p.destroy();
+    var p = Parser.new(std.testing.allocator, &l);
+    defer p.free();
 
     var prog = try p.parseProgam();
     defer prog.deinit();
@@ -221,8 +249,8 @@ test "return statement" {
     var l = try lexer.Lexer.new(std.testing.allocator, input);
     defer l.free();
 
-    var p = Parser.create(std.testing.allocator, &l);
-    defer p.destroy();
+    var p = Parser.new(std.testing.allocator, &l);
+    defer p.free();
 
     var prog = try p.parseProgam();
     defer prog.deinit();
@@ -245,8 +273,8 @@ test "let statement" {
     var l = try lexer.Lexer.new(std.testing.allocator, input);
     defer l.free();
 
-    var p = Parser.create(std.testing.allocator, &l);
-    defer p.destroy();
+    var p = Parser.new(std.testing.allocator, &l);
+    defer p.free();
 
     var prog = try p.parseProgam();
     defer prog.deinit();

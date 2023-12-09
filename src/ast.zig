@@ -130,15 +130,22 @@ pub const ExpressionStatement = struct {
 // ...
 const ExpressionType = enum {
     identifier,
+    integer_literal,
 };
 
 pub const Expression = union(ExpressionType) {
     identifier: Identifier,
+    integer_literal: IntegerLiteral,
 };
 
 pub const Identifier = struct {
     token: token.Token,
     value: []u8,
+};
+
+pub const IntegerLiteral = struct {
+    token: token.Token,
+    value: i64,
 };
 
 // Will be the root of the AST
