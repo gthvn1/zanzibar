@@ -19,7 +19,7 @@ pub const Repl = struct {
             try out.print("{s}", .{prompt});
 
             // (R)ead the input
-            var code = try in.readUntilDelimiterOrEof(&buffer, '\n');
+            const code = try in.readUntilDelimiterOrEof(&buffer, '\n');
 
             if (code) |c| {
                 var l = try lexer.Lexer.new(gpa.allocator(), c);
@@ -27,7 +27,7 @@ pub const Repl = struct {
 
                 while (true) {
                     // (E)val
-                    var t = l.nextToken();
+                    const t = l.nextToken();
                     if (t.type == .EOF) break;
 
                     // (P)rint
