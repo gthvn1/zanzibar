@@ -26,7 +26,7 @@ pub const Lexer = struct {
     }
 
     pub fn nextToken(self: *Lexer) token.Token {
-        var ttype: token.TokenType = undefined;
+        var ttype: token.TokenType = .ILLEGAL;
         var tsize: usize = 1; // Most of tokens are 1 char so by default
         // we set token size to one but some are 2 or more. Note that
         // ident are not using tsize and are returned by their own function.
@@ -72,7 +72,7 @@ pub const Lexer = struct {
                     return self.readIdentifier();
                 if (std.ascii.isDigit(self.ch))
                     return self.readNumber();
-                ttype = .ILLEGAL;
+                // else we keep ttype set to .ILLEGAL;
             },
         }
 

@@ -27,7 +27,7 @@ const Parser = struct {
 
     pub fn new(allocator: std.mem.Allocator, l: *lexer.Lexer) Parser {
         var ppf = std.EnumArray(token.TokenType, ?PrefixParseFn).initFill(null);
-        var ipf = std.EnumArray(token.TokenType, ?InfixParseFn).initFill(null);
+        const ipf = std.EnumArray(token.TokenType, ?InfixParseFn).initFill(null);
 
         ppf.set(token.TokenType.IDENT, parseIdentifier);
         ppf.set(token.TokenType.INT, parseIntegerLiteral);
