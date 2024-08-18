@@ -16,7 +16,7 @@ Thus [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Mo
 
 - As easy as `zig build run`
 - We will visit
-  - [ ] **Lexer** islang
+  - [ ] **Lexer** islang: `zig test src/lexer.zig`
   - [ ] **Parser** islang
   - [ ] **AST** islang
   - [ ] **IOS** islang also known as Internal Object System islang
