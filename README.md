@@ -15,25 +15,8 @@ Thus [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Mo
 ## Travel to Monkey Islang
 
 - As easy as `zig build run`
-```
-❯ zig build run
-Welcome to Monkey Islang!!!
-This is the REPL for Monkey programming language.
-Feel free to type commands or 'quit;'
->> let a = 10;
-token.Token{ .type = token.TokenType.LET, .literal = { 108, 101, 116 } }
-token.Token{ .type = token.TokenType.IDENT, .literal = { 97 } }
-token.Token{ .type = token.TokenType.ASSIGN, .literal = { 61 } }
-token.Token{ .type = token.TokenType.INT, .literal = { 49, 48 } }
-token.Token{ .type = token.TokenType.SEMICOLON, .literal = { 59 } }
->> quit;
-token.Token{ .type = token.TokenType.IDENT, .literal = { 113, 117, 105, 116 } }
-
-May your trip be as enjoyable as finding extra bananas at the bottom of the bag!
-```
-
 - We will visit
-  - [x] **Lexer** islang
+  - [ ] **Lexer** islang
   - [ ] **Parser** islang
   - [ ] **AST** islang
   - [ ] **IOS** islang also known as Internal Object System islang
