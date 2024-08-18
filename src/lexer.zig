@@ -72,13 +72,18 @@ pub const Lexer = struct {
 };
 
 test "read simple tokens" {
-    var l = try Lexer.alloc("=+{", std.testing.allocator);
+    var l = try Lexer.alloc("=+{}(),;", std.testing.allocator);
     defer l.free();
 
     const expectedTokens = [_]token.Token{
         .{ .tt = .assign, .lit = "=" },
         .{ .tt = .plus, .lit = "+" },
         .{ .tt = .lbrace, .lit = "{" },
+        .{ .tt = .rbrace, .lit = "}" },
+        .{ .tt = .lparen, .lit = "(" },
+        .{ .tt = .rparen, .lit = ")" },
+        .{ .tt = .comma, .lit = "," },
+        .{ .tt = .semicolon, .lit = ";" },
         .{ .tt = .eof, .lit = "" },
     };
 
