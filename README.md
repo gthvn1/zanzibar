@@ -28,8 +28,8 @@ May your trip be as enjoyable as finding extra
 bananas at the bottom of the bag!
 ```
 - We will visit
-  - [ ] **Lexer** islang: `zig test src/lexer.zig`
-  - [ ] **Parser** islang
-  - [ ] **AST** islang
-  - [ ] **IOS** islang also known as Internal Object System islang
-  - [ ] **Evaluator** islang
+  - [ ] **Lexer**
+  - [ ] **Parser**
+  - [ ] **AST**
+  - [ ] **IOS**
+  - [ ] **Evaluator**
