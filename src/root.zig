@@ -3,10 +3,18 @@ const std = @import("std");
 const lexer = @import("lexer.zig");
 
 pub fn startRepl(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
-    const bye =
+    const menu_str =
+        \\Welcome to Monkey Islang !!!
+        \\Feel free to type Monkey code or 'quit'
+    ;
+
+    const bye_str =
         \\May your trip be as enjoyable as finding extra
         \\bananas at the bottom of the bag!
     ;
+
+    try writer.print("{s}\n", .{menu_str});
+
     loop: while (true) {
         try writer.writeAll(">> ");
         try writer.flush();
@@ -15,9 +23,9 @@ pub fn startRepl(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
             error.EndOfStream => {
                 // reached end
                 // the normal case
-                try writer.print("\n{s}\n", .{bye});
+                try writer.print("\n{s}\n", .{bye_str});
                 try writer.flush();
-                break :loop;
+                return;
             },
             error.StreamTooLong => {
                 try writer.writeAll("ERROR: the line was longer than the internal buffer\n");
@@ -35,7 +43,7 @@ pub fn startRepl(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
             const quit = std.ascii.lowerString(&buf, line);
 
             if (std.mem.eql(u8, "quit", quit)) {
-                try writer.print("\n{s}\n", .{bye});
+                try writer.print("\n{s}\n", .{bye_str});
                 try writer.flush();
                 return;
             }
@@ -44,8 +52,8 @@ pub fn startRepl(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
         // Consume the '\n' before continuing
         reader.toss(1);
 
-        try writer.writeAll("You typed: ");
-        try writer.print("<{s}>\n", .{line});
+        try writer.print("You typed: <{s}>\n", .{line});
+        try writer.flush();
 
         lexer.analyse(line);
     }

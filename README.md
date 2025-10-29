@@ -15,6 +15,18 @@ Thus [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Mo
 ## Travel to Monkey Islang
 
 - As easy as `zig build run`
+```
+# zig build run
+Welcome to Monkey Islang !!!
+Feel free to type Monkey code or 'quit'
+>> Hello, Sailor!
+You typed: <Hello, Sailor!>
+TODO: lexical analysis
+>> quit
+
+May your trip be as enjoyable as finding extra
+bananas at the bottom of the bag!
+```
 - We will visit
   - [ ] **Lexer** islang: `zig test src/lexer.zig`
   - [ ] **Parser** islang
