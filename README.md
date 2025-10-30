@@ -16,16 +16,23 @@ Thus [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Mo
 
 - As easy as `zig build run`
 ```
-# zig build run
-Welcome to Monkey Islang !!!
-Feel free to type Monkey code or 'quit'
->> Hello, Sailor!
-You typed: <Hello, Sailor!>
-TODO: lexical analysis
->> quit
-
-May your trip be as enjoyable as finding extra
-bananas at the bottom of the bag!
+Welcome to Monkey Islang REPL!
+Type Monkey code to set sail on an adventure.
+Use '#help' for guidance, or '#quit' to leave the island.
+>> ++/
+You typed: <++/>
+OK: added 3 tokens, total is 3
+>> -/
+You typed: <-/>
+OK: added 2 tokens, total is 5
+>> #help
+Commands:
+  #help   -> show available commands
+  #quit   -> exit the REPL
+  #tokens -> show current tokens
+>> #quit
+Farewell, adventurer! May you always find extra
+bananas at the bottom of the bag...
 ```
 - We will visit
   - [ ] **Lexer**

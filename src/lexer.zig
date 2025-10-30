@@ -1,6 +1,25 @@
 const std = @import("std");
 
-const Token = struct {};
+const TokenType = enum {
+    assign,
+    comma,
+    semicolon,
+    lparen,
+    rparen,
+    lbrace,
+    rbrace,
+    plus,
+    minus,
+    asterisk,
+    slash,
+    lt,
+    gt,
+    bang,
+};
+
+const Token = struct {
+    tt: TokenType,
+};
 
 pub const Lexer = struct {
     tokens: std.ArrayList(Token),
@@ -28,15 +47,48 @@ pub const Lexer = struct {
     //   INTEGER(5),
     //   SEMICOLON
     // ]
-    pub fn transform(self: *Lexer, input: []const u8) void {
-        _ = self; // TODO: Add new token into the list of tokens of the lexer
+    pub fn tokenize(self: *Lexer, input: []const u8) !void {
+        // We need to read char by char
+        var index: usize = 0;
+        var tokens_added: usize = 0;
 
-        var it = std.mem.tokenizeScalar(u8, input, ' ');
+        loop: while (index < input.len) {
+            const tok_type: TokenType = switch (input[index]) {
+                '\n', '\t', ' ', '\r' => {
+                    index += 1;
+                    continue :loop;
+                },
+                '=' => .assign,
+                ';' => .semicolon,
+                ',' => .comma,
+                '(' => .lparen,
+                ')' => .rparen,
+                '{' => .lbrace,
+                '}' => .rbrace,
+                '+' => .plus,
+                '-' => .minus,
+                '*' => .asterisk,
+                '/' => .slash,
+                '!' => .bang,
+                '<' => .lt,
+                '>' => .gt,
+                else => |c| {
+                    std.debug.print("TODO: found {c}, skipping for now\n", .{c});
+                    index += 1;
+                    continue :loop;
+                },
+            };
 
-        while (it.next()) |item| {
-            std.debug.print("  found: {s}\n", .{item});
+            const token = Token{
+                .tt = tok_type,
+            };
+
+            try self.tokens.append(self.allocator, token);
+            tokens_added += 1;
+
+            index += 1;
         }
 
-        std.debug.print("TODO: lexical analysis\n", .{});
+        std.debug.print("OK: added {d} tokens, total is {d}\n", .{ tokens_added, self.tokens.items.len });
     }
 };

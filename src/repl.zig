@@ -89,6 +89,6 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
         try writer.print("You typed: <{s}>\n", .{line});
         try writer.flush();
 
-        lexer.transform(line);
+        try lexer.tokenize(line);
     }
 }
