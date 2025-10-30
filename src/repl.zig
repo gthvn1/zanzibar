@@ -1,6 +1,27 @@
 const std = @import("std");
 const Lexer = @import("lexer.zig").Lexer;
 
+const Cmd = enum {
+    help,
+    quit,
+    tokens,
+
+    pub fn fromString(str: []const u8) ?Cmd {
+        const map = std.StaticStringMap(Cmd).initComptime(.{
+            .{ "#help", .help },
+            .{ "#quit", .quit },
+            .{ "#tokens", .tokens },
+        });
+        return map.get(str);
+    }
+};
+
+fn helperPrintLn(writer: *std.Io.Writer, str: []const u8) !void {
+    try writer.writeAll(str);
+    try writer.writeAll("\n");
+    try writer.flush();
+}
+
 pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(gpa.deinit() == .ok);
@@ -8,17 +29,25 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
     var lexer = Lexer.init(gpa.allocator());
     defer lexer.deinit();
 
-    const menu_str =
-        \\Welcome to Monkey Islang !!!
-        \\Feel free to type Monkey code or 'quit'
+    const welcome_str =
+        \\Welcome to Monkey Islang REPL!
+        \\Type Monkey code to set sail on an adventure.
+        \\Use '#help' for guidance, or '#quit' to leave the island.
+    ;
+
+    const help_str =
+        \\Commands:
+        \\  #help   -> show available commands
+        \\  #quit   -> exit the REPL
+        \\  #tokens -> show current tokens
     ;
 
     const bye_str =
-        \\May your trip be as enjoyable as finding extra
-        \\bananas at the bottom of the bag!
+        \\Farewell, adventurer! May you always find extra
+        \\bananas at the bottom of the bag...
     ;
 
-    try writer.print("{s}\n", .{menu_str});
+    try helperPrintLn(writer, welcome_str);
 
     loop: while (true) {
         try writer.writeAll(">> ");
@@ -27,35 +56,35 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
         const line = reader.takeDelimiterExclusive('\n') catch |err| switch (err) {
             error.EndOfStream => {
                 // reached end
-                // the normal case
-                try writer.print("\n{s}\n", .{bye_str});
-                try writer.flush();
+                try helperPrintLn(writer, bye_str);
                 return;
             },
             error.StreamTooLong => {
-                try writer.writeAll("ERROR: the line was longer than the internal buffer\n");
+                try helperPrintLn(writer, "ERROR: the line was longer than the internal buffer");
                 continue :loop;
             },
             error.ReadFailed => {
-                try writer.writeAll("ERROR: the read failed\n");
+                try helperPrintLn(writer, "ERROR: the read failed");
                 continue :loop;
             },
         };
 
-        // Should we quit?
-        if (line.len == "quit".len) {
-            var buf: [4]u8 = undefined;
-            const quit = std.ascii.lowerString(&buf, line);
-
-            if (std.mem.eql(u8, "quit", quit)) {
-                try writer.print("\n{s}\n", .{bye_str});
-                try writer.flush();
-                return;
-            }
-        }
-
         // Consume the '\n' before continuing
         reader.toss(1);
+
+        // Is it a command?
+        if (Cmd.fromString(line)) |cmd| {
+            switch (cmd) {
+                .help => try helperPrintLn(writer, help_str),
+                .quit => {
+                    try helperPrintLn(writer, bye_str);
+                    return;
+                },
+                .tokens => try helperPrintLn(writer, "TODO: show current tokens"),
+            }
+
+            continue :loop;
+        }
 
         try writer.print("You typed: <{s}>\n", .{line});
         try writer.flush();
