@@ -1,8 +1,15 @@
 //! By convention, root.zig is the root source file when making a library.
 const std = @import("std");
-const lexer = @import("lexer.zig");
+const Lexer = @import("lexer.zig").Lexer;
 
 pub fn startRepl(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(gpa.deinit() == .ok);
+
+    var lexer = Lexer.init(allocator);
+    defer lexer.deinit();
+
     const menu_str =
         \\Welcome to Monkey Islang !!!
         \\Feel free to type Monkey code or 'quit'
