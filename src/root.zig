@@ -4,10 +4,9 @@ const Lexer = @import("lexer.zig").Lexer;
 
 pub fn startRepl(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    var lexer = Lexer.init(allocator);
+    var lexer = Lexer.init(gpa.allocator());
     defer lexer.deinit();
 
     const menu_str =
