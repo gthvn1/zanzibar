@@ -3,12 +3,14 @@ const Lexer = @import("lexer.zig").Lexer;
 
 const Cmd = enum {
     help,
+    load,
     quit,
     tokens,
 
     pub fn fromString(str: []const u8) ?Cmd {
         const map = std.StaticStringMap(Cmd).initComptime(.{
             .{ "#help", .help },
+            .{ "#load", .load },
             .{ "#quit", .quit },
             .{ "#tokens", .tokens },
         });
@@ -24,9 +26,10 @@ fn helperPrintLn(writer: *std.Io.Writer, str: []const u8) !void {
 
 pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    var lexer = Lexer.init(gpa.allocator());
+    var lexer = Lexer.init(allocator);
     defer lexer.deinit();
 
     const welcome_str =
@@ -38,6 +41,7 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
     const help_str =
         \\Commands:
         \\  #help   -> show available commands
+        \\  #load   -> load the file (you will be prompted for the filename)
         \\  #quit   -> exit the REPL
         \\  #tokens -> show current tokens
     ;
@@ -76,6 +80,17 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
         if (Cmd.fromString(line)) |cmd| {
             switch (cmd) {
                 .help => try helperPrintLn(writer, help_str),
+                .load => {
+                    if (loadFile(allocator, reader, writer)) |str| {
+                        defer allocator.free(str);
+                        try writer.print("file loaded\n", .{});
+                        try writer.flush();
+
+                        try lexer.tokenize(str);
+                        try writer.print("done\n", .{});
+                        try writer.flush();
+                    }
+                },
                 .quit => {
                     try helperPrintLn(writer, bye_str);
                     return;
@@ -91,4 +106,36 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
 
         try lexer.tokenize(line);
     }
+}
+
+fn loadFile(allocator: std.mem.Allocator, reader: *std.Io.Reader, writer: *std.Io.Writer) ?[]u8 {
+    writer.writeAll("enter filename > ") catch {
+        std.debug.print("Failed to print on the screen\n", .{});
+        return null;
+    };
+
+    writer.flush() catch {
+        std.debug.print("Failed to flush\n", .{});
+        return null;
+    };
+
+    const filename = reader.takeDelimiterExclusive('\n') catch {
+        std.debug.print("Failed to read the filename\n", .{});
+        return null;
+    };
+
+    reader.toss(1);
+
+    const file = std.fs.cwd().openFile(filename, .{}) catch {
+        std.debug.print("Failed to open the file\n", .{});
+        return null;
+    };
+
+    const contents = file.readToEndAlloc(allocator, std.math.maxInt(usize)) catch {
+        std.debug.print("Failed read the file\n", .{});
+        return null;
+    };
+
+    file.close();
+    return contents;
 }
