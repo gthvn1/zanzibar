@@ -80,7 +80,7 @@ pub fn start(reader: *std.Io.Reader, writer: *std.Io.Writer) !void {
                     try helperPrintLn(writer, bye_str);
                     return;
                 },
-                .tokens => try helperPrintLn(writer, "TODO: show current tokens"),
+                .tokens => try lexer.printTokens(writer),
             }
 
             continue :loop;

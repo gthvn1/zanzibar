@@ -15,10 +15,18 @@ const TokenType = enum {
     lt,
     gt,
     bang,
+
+    pub fn toString(self: TokenType) []const u8 {
+        return @tagName(self);
+    }
 };
 
 const Token = struct {
     tt: TokenType,
+
+    pub fn toString(self: Token) []const u8 {
+        return self.tt.toString();
+    }
 };
 
 pub const Lexer = struct {
@@ -34,6 +42,17 @@ pub const Lexer = struct {
 
     pub fn deinit(self: *Lexer) void {
         self.tokens.deinit(self.allocator);
+    }
+
+    pub fn printTokens(self: *const Lexer, writer: *std.Io.Writer) !void {
+        var buf: [64]u8 = undefined;
+
+        for (self.tokens.items) |token| {
+            const slice = try std.fmt.bufPrint(buf[0..], "Token.{s}\n", .{token.toString()});
+            try writer.writeAll(slice);
+        }
+
+        try writer.flush();
     }
 
     // We want to transform the following string: "let x = 5 + 5"
