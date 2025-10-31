@@ -16,20 +16,24 @@ Thus [Zanzibar](https://github.com/gthvn1/zanzibar/) is an implementation of [Mo
 
 - As easy as `zig build run`
 ```
+❯ zig build run
 Welcome to Monkey Islang REPL!
 Type Monkey code to set sail on an adventure.
 Use '#help' for guidance, or '#quit' to leave the island.
->> ++/
-You typed: <++/>
-OK: added 3 tokens, total is 3
->> -/
-You typed: <-/>
-OK: added 2 tokens, total is 5
->> #help
-Commands:
-  #help   -> show available commands
-  #quit   -> exit the REPL
-  #tokens -> show current tokens
+>> #load
+enter filename > monkey/test1.monk
+file loaded
+OK: added 8 tokens, total is 8
+done
+>> #tokens
+Token.lbrace
+Token.rbrace
+Token.lparen
+Token.rparen
+Token.asterisk
+Token.slash
+Token.plus
+Token.minus
 >> #quit
 Farewell, adventurer! May you always find extra
 bananas at the bottom of the bag...
