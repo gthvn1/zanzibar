@@ -32,10 +32,15 @@ const Token = struct {
     }
 };
 
+const LexerError = error{
+    AlreadyInUse,
+};
+
 pub const Lexer = struct {
     tokens: std.ArrayList(Token),
     allocator: std.mem.Allocator,
     index: usize,
+    input: ?[]const u8,
 
     const keywords = [_]struct { []const u8, TokenType }{
         .{ "fn", .function },
@@ -49,11 +54,13 @@ pub const Lexer = struct {
             .tokens = std.ArrayList(Token).empty,
             .allocator = allocator,
             .index = 0,
+            .input = null,
         };
     }
 
     pub fn deinit(self: *Lexer) void {
         self.tokens.deinit(self.allocator);
+        std.debug.assert(self.input == null);
     }
 
     pub fn printTokens(self: *const Lexer, writer: *std.Io.Writer) !void {
@@ -79,14 +86,28 @@ pub const Lexer = struct {
     //   SEMICOLON
     // ]
     pub fn tokenize(self: *Lexer, input: []const u8) !void {
-        // We need to read char by char
+        if (self.input) |_| {
+            std.debug.print("ERROR: input already used", .{});
+            return LexerError.AlreadyInUse;
+        }
+
+        // Ensure that we have our own copy of input. It is not strictly
+        // required but tokenize can be now async.
+        const buf = try self.allocator.alloc(u8, input.len);
+        std.mem.copyForwards(u8, buf, input);
+        self.input = buf;
+        defer {
+            self.allocator.free(buf);
+            self.input = null;
+        }
+
         self.index = 0;
+
         var tokens_added: usize = 0;
 
-        loop: while (self.index < input.len) {
-            const tok_type: TokenType = switch (input[self.index]) {
+        loop: while (self.readChar()) |carlu| {
+            const tok_type: TokenType = switch (carlu) {
                 '\n', '\t', ' ', '\r' => {
-                    self.index += 1;
                     continue :loop;
                 },
                 '=' => .assign,
@@ -103,11 +124,13 @@ pub const Lexer = struct {
                 '!' => .bang,
                 '<' => .lt,
                 '>' => .gt,
-                else => |c| {
-                    if (isLetter(c)) {
-                        _ = self.readIdentifier(input[self.index..]);
+                else => {
+                    if (isLetter(carlu)) {
+                        // When we read char we update the index so we can now substract one
+                        self.index -= 1;
+                        _ = self.readIdentifier();
                     } else {
-                        std.debug.print("TODO: unknown character {c}, skipping for now\n", .{c});
+                        std.debug.print("TODO: unknown character {c}, skipping for now\n", .{carlu});
                         self.index += 1;
                     }
                     continue :loop;
@@ -120,34 +143,58 @@ pub const Lexer = struct {
 
             try self.tokens.append(self.allocator, token);
             tokens_added += 1;
-
-            self.index += 1;
         }
 
         std.debug.print("OK: added {d} tokens, total is {d}\n", .{ tokens_added, self.tokens.items.len });
     }
 
-    fn readIdentifier(self: *Lexer, input: []const u8) []const u8 {
+    fn readChar(self: *Lexer) ?u8 {
+        if (self.input) |s| {
+            if (self.index >= s.len) {
+                // We are at the end of the string
+                return null;
+            }
+            const c = s[self.index];
+            self.index += 1;
+            return c;
+        } else return null;
+    }
+
+    fn peekChar(self: *const Lexer) ?u8 {
+        if (self.input) |s| {
+            if (self.index + 1 >= s.len) {
+                return null;
+            }
+            return s[self.index + 1];
+        } else return null;
+    }
+
+    fn readIdentifier(self: *Lexer) []const u8 {
         // If we are here we know that self.index is on a character
+        std.debug.assert(self.input != null);
+
+        const start: usize = self.index;
         var pos: usize = 0;
 
-        for (input) |c| {
-            if (isLetter(c)) {
-                pos += 1;
-            } else {
-                break;
-            }
+        while (true) {
+            if (self.readChar()) |c| {
+                if (isLetter(c)) {
+                    pos += 1;
+                } else {
+                    // Take a step back since it is not a letter
+                    self.index -= 1;
+                    break;
+                }
+            } else break;
         }
 
-        const ident = input[0..pos];
+        const ident = self.input.?[start .. start + pos];
 
         if (keywords_map.get(ident)) |_| {
             std.debug.print("TODO: found keyword {s}\n", .{ident});
         } else {
             std.debug.print("TODO: found identifier {s}\n", .{ident});
         }
-
-        self.index += pos;
 
         return ident;
     }
