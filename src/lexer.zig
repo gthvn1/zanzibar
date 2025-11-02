@@ -14,10 +14,21 @@ const TokenType = enum {
     slash,
     lt,
     gt,
+    eq,
+    not_eq,
     bang,
 
-    function,
-    let,
+    ident,
+    number,
+
+    // As keywords are also reserved keywords in Zig we prefix them
+    kw_function,
+    kw_let,
+    kw_true,
+    kw_false,
+    kw_if,
+    kw_else,
+    kw_return,
 
     pub fn toString(self: TokenType) []const u8 {
         return @tagName(self);
@@ -43,8 +54,13 @@ pub const Lexer = struct {
     input: ?[]const u8,
 
     const keywords = [_]struct { []const u8, TokenType }{
-        .{ "fn", .function },
-        .{ "let", .let },
+        .{ "fn", .kw_function },
+        .{ "let", .kw_let },
+        .{ "true", .kw_true },
+        .{ "false", .kw_false },
+        .{ "if", .kw_if },
+        .{ "else", .kw_else },
+        .{ "return", .kw_return },
     };
 
     const keywords_map = std.StaticStringMap(TokenType).initComptime(keywords);
@@ -110,7 +126,7 @@ pub const Lexer = struct {
                 '\n', '\t', ' ', '\r' => {
                     continue :loop;
                 },
-                '=' => .assign,
+                '=' => self.matchTwoCharToken('=', .eq, .assign),
                 ';' => .semicolon,
                 ',' => .comma,
                 '(' => .lparen,
@@ -121,19 +137,25 @@ pub const Lexer = struct {
                 '-' => .minus,
                 '*' => .asterisk,
                 '/' => .slash,
-                '!' => .bang,
+                '!' => self.matchTwoCharToken('=', .not_eq, .bang),
                 '<' => .lt,
                 '>' => .gt,
-                else => {
+                else => blk: {
                     if (isLetter(carlu)) {
-                        // When we read char we update the index so we can now substract one
+                        // When we read char we update the index so we can now substract one.
+                        // And we go back to one char to have the whole identifier.
                         self.index -= 1;
-                        _ = self.readIdentifier();
+                        break :blk self.readIdentifier();
+                    }
+                    if (isDigit(carlu)) {
+                        // Same as above, it is safe to substract one here.
+                        self.index -= 1;
+                        break :blk self.readNumber();
                     } else {
                         std.debug.print("TODO: unknown character {c}, skipping for now\n", .{carlu});
-                        self.index += 1;
+                        // Don't try to append something, ignore and continue
+                        continue :loop;
                     }
-                    continue :loop;
                 },
             };
 
@@ -148,6 +170,7 @@ pub const Lexer = struct {
         std.debug.print("OK: added {d} tokens, total is {d}\n", .{ tokens_added, self.tokens.items.len });
     }
 
+    /// return the current character and update the index position
     fn readChar(self: *Lexer) ?u8 {
         if (self.input) |s| {
             if (self.index >= s.len) {
@@ -160,17 +183,19 @@ pub const Lexer = struct {
         } else return null;
     }
 
+    /// look the current character without updating the index
     fn peekChar(self: *const Lexer) ?u8 {
         if (self.input) |s| {
-            if (self.index + 1 >= s.len) {
+            if (self.index >= s.len) {
                 return null;
             }
-            return s[self.index + 1];
+            return s[self.index];
         } else return null;
     }
 
-    fn readIdentifier(self: *Lexer) []const u8 {
-        // If we are here we know that self.index is on a character
+    fn readIdentifier(self: *Lexer) TokenType {
+        // If we are here we know that self.index is at the first character
+        // of the identifier.
         std.debug.assert(self.input != null);
 
         const start: usize = self.index;
@@ -190,19 +215,64 @@ pub const Lexer = struct {
 
         const ident = self.input.?[start .. start + pos];
 
-        if (keywords_map.get(ident)) |_| {
-            std.debug.print("TODO: found keyword {s}\n", .{ident});
-        } else {
-            std.debug.print("TODO: found identifier {s}\n", .{ident});
+        if (keywords_map.get(ident)) |tt| {
+            return tt;
         }
 
-        return ident;
+        return .ident;
+    }
+
+    fn readNumber(self: *Lexer) TokenType {
+        const start: usize = self.index;
+        var pos: usize = 0;
+        var fractional = false;
+
+        while (true) {
+            if (self.readChar()) |c| {
+                if (isDigit(c)) {
+                    pos += 1;
+                } else if (c == '.' and !fractional) {
+                    fractional = true;
+                    pos += 1;
+                } else {
+                    self.index -= 1;
+                    break;
+                }
+            } else break;
+        }
+
+        const number = self.input.?[start .. start + pos];
+        std.debug.print("TODO: keep number {s} somewhere\n", .{number});
+        return .number;
+    }
+
+    fn matchTwoCharToken(
+        self: *Lexer,
+        expected: u8,
+        two_char_tt: TokenType,
+        one_char_tt: TokenType,
+    ) TokenType {
+        if (self.peekChar()) |c| {
+            if (c == expected) {
+                self.index += 1;
+                return two_char_tt;
+            }
+        }
+
+        return one_char_tt;
     }
 };
 
 fn isLetter(c: u8) bool {
     return switch (c) {
         'a'...'z', 'A'...'Z', '_' => true,
+        else => false,
+    };
+}
+
+fn isDigit(c: u8) bool {
+    return switch (c) {
+        '0'...'9' => true,
         else => false,
     };
 }
